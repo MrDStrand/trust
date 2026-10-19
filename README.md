@@ -50,3 +50,6 @@ Open `/host` and scroll to **Export game results**. **Download scoreboard CSV** 
 Daniel's host dashboard has a second close button, **Close with 3-second countdown**. It broadcasts a prominent 3-2-1 banner to all connected players. Voting and vote changes remain possible until the server-side deadline, then the server closes and scores the round automatically. **Close immediately** remains available, including during the countdown. Refreshing a page during countdown restores the remaining time. Server restart during countdown interrupts the timer; do not redeploy mid-round.
 
 When any registered player has not voted, the completed round awards zero points (consistent with the existing on-screen rules). Live hypothetical projections remain visible.
+
+## Compact player layout
+The player page now shows three side-by-side columns on desktop: vertical voting buttons, current named votes and projected scores, and official leaderboard. Live vote/outcome and round history remain below. On small screens the columns stack for readability. No server changes are required for this layout.
