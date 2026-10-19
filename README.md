@@ -75,3 +75,6 @@ When the host chooses **Close with 10-second blind countdown**, the publicly vis
 ## Blind countdown before/after comparison
 
 When Daniel starts the 10-second countdown, the server saves a snapshot of every player's vote and projected points. During the countdown all public views, including the host dashboard, show only this frozen snapshot. Only people who voted before the countdown can privately change or withdraw their vote. When the countdown ends, the server reveals final votes and awards. Both pages then show a **Blind countdown: frozen vs final** table with the original vote, original projected points, final vote, actual awarded points, and a change indicator for each player. The comparison remains visible while the round is closed; it is also stored in round history data. Rounds closed immediately have no blind comparison.
+
+
+Player voting panel: A/B/C buttons and withdraw control are hidden when voting is not active. During open voting and the 10-second blind countdown, the panel has a bright near-white background and high-contrast controls. Countdown eligibility restrictions are unchanged.
