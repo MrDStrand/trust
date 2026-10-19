@@ -12,7 +12,7 @@ let game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'
 try {game=JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{}
 let closeTimer=null;
 function cancelCountdown(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}game.closeAt=null;}
-function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;cancelCountdown();const calc=calculate();const multiplier=game.round===5?2:1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
+function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;cancelCountdown();const calc=calculate();const multiplier=1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
 function save(){fs.writeFileSync(DATA,JSON.stringify(game,null,2));}
 function calculate(){
  const counts={A:0,B:0,C:0};
@@ -21,7 +21,7 @@ function calculate(){
  const total=players.length, voted=counts.A+counts.B+counts.C;
  const highest=Math.max(...Object.values(counts));
  const leaders=Object.keys(counts).filter(k=>counts[k]===highest);
- const unanimous=total===15&&highest===15;
+ const unanimous=voted>0&&highest===voted;
  const points={};
  for(const p of players){
   if(!p.vote)points[p.id]=-25;
