@@ -12,7 +12,7 @@ let game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'
 try {game=JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{}
 let closeTimer=null;
 function cancelCountdown(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}game.closeAt=null;game.frozenState=null;game.countdownEligible=null;}
-function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;cancelCountdown();const calc=calculate();const multiplier=1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
+function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;const frozen=game.phase==='countdown'&&game.frozenState?{counts:{...game.frozenState.calc.counts},voted:game.frozenState.calc.voted,abstaining:game.frozenState.calc.abstaining,players:game.frozenState.players.map(p=>({id:p.id,name:p.name,vote:p.vote,projected:p.projected}))}:null;cancelCountdown();const calc=calculate();const multiplier=1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,frozen,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
 function save(){fs.writeFileSync(DATA,JSON.stringify(game,null,2));}
 function calculate(){
  const counts={A:0,B:0,C:0};

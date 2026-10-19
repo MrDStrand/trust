@@ -70,3 +70,8 @@ For fewer than 15 registered players, unanimity does not trigger the +150 cooper
 ## 10-second blind countdown
 
 When the host chooses **Close with 10-second blind countdown**, the publicly visible votes, totals and projections are frozen immediately. Players who had already cast a vote may privately switch A/B/C or withdraw during the countdown; only their own screen acknowledges the change. Players without a vote when the countdown begins cannot cast one during those ten seconds. At the end, the server scores the final actual votes and reveals the results to everyone. Immediate close still closes without a countdown. All rounds use the same scoring (no final-round multiplier).
+
+
+## Blind countdown before/after comparison
+
+When Daniel starts the 10-second countdown, the server saves a snapshot of every player's vote and projected points. During the countdown all public views, including the host dashboard, show only this frozen snapshot. Only people who voted before the countdown can privately change or withdraw their vote. When the countdown ends, the server reveals final votes and awards. Both pages then show a **Blind countdown: frozen vs final** table with the original vote, original projected points, final vote, actual awarded points, and a change indicator for each player. The comparison remains visible while the round is closed; it is also stored in round history data. Rounds closed immediately have no blind comparison.
