@@ -9,7 +9,7 @@ A live multiplayer voting game hosted by **Daniel Strand**. No player logins: pa
 3. Set a private host key and start:
    - macOS/Linux: `HOST_KEY='your-long-secret' npm start`
    - Windows PowerShell: `$env:HOST_KEY='your-long-secret'; npm start`
-4. Open `http://localhost:3000/?host` for Daniel's control page. Enter the host key.
+4. Open `http://localhost:3000/host` for Daniel's control page. Enter the host key.
 5. Share `http://localhost:3000/` with players **only if they are on the same computer**. For remote participants, deploy the app to a public Node.js hosting service and share its HTTPS address.
 
 ## Hosting for a remote team
@@ -34,3 +34,10 @@ Deploy this directory to a Node.js hosting service that supports persistent Sock
 - Host actions require the private `HOST_KEY`; do not send the host key to players or include it in a shared URL.
 - This is suitable for a friendly team activity, not high-security voting. It does not prevent someone from registering multiple names on different browsers.
 - Votes, player names and scores are broadcast to all connected clients. Inform participants before starting.
+
+## Dedicated Game Master page
+
+- Player link: `https://YOUR-SERVICE.onrender.com/`
+- Daniel Strand host dashboard: `https://YOUR-SERVICE.onrender.com/host`
+- The host enters `HOST_KEY` in the host dashboard. The player page does not display host controls.
+- After committing these files to GitHub, Render redeploys the updated site (if auto-deploy is enabled).
