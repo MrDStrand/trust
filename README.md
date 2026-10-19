@@ -22,7 +22,7 @@ Deploy this directory to a Node.js hosting service that supports persistent Sock
 
 - Players join with a unique name. Names and live votes are visible to everyone.
 - Daniel opens voting. Players can choose A, B or C, change their vote, or withdraw it until closing.
-- Projected points appear only when every registered player has voted. Daniel may close even if some players have not voted; in that case no one earns points for that round. This makes last-second withholding risky.
+- Live hypothetical projected points appear as soon as 2 players have voted, calculated among submitted votes only. Missing voters show no projection. This preview is explicitly labeled hypothetical: **the official rule is unchanged**. Daniel may close with missing votes, but in that case no one earns points for that round. This makes last-second withholding risky.
 - Scoring (for a full set of votes): unanimous = +100 each; exactly one dissenter = +200 dissenter, +20 others; unique absolute majority with 2+ dissenters = 0 majority, -50 others; otherwise 0 everyone.
 - Round 5 doubles all points.
 - Daniel can announce messages, remove players between rounds, and reset the game.

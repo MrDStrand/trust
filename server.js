@@ -11,7 +11,35 @@ const PORT=process.env.PORT||3000;
 let game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Daniel Strand'};
 try {game=JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{}
 function save(){fs.writeFileSync(DATA,JSON.stringify(game,null,2));}
-function calculate(){const counts={A:0,B:0,C:0};Object.values(game.players).forEach(p=>{if(p.vote)counts[p.vote]++});const total=Object.keys(game.players).length;const voted=counts.A+counts.B+counts.C;const highest=Math.max(...Object.values(counts));const majority=Object.keys(counts).filter(k=>counts[k]===highest);const pts={};let situation='Waiting for votes';if(voted===total&&total>=2){if(highest===total){situation='Perfect cooperation';for(const p of Object.values(game.players))pts[p.id]=100;}else if(highest===total-1&&majority.length===1){situation='Perfect betrayal';for(const p of Object.values(game.players))pts[p.id]=p.vote===majority[0]?20:200;}else if(majority.length===1&&highest>total/2){situation='Failed betrayal';for(const p of Object.values(game.players))pts[p.id]=p.vote===majority[0]?0:-50;}else{situation='Complete breakdown';for(const p of Object.values(game.players))pts[p.id]=0;}}return {counts,voted,total,points:pts,situation,ready:voted===total&&total>=2};}
+function calculate(){
+ const counts={A:0,B:0,C:0};
+ const players=Object.values(game.players);
+ players.forEach(p=>{if(p.vote)counts[p.vote]++});
+ const total=players.length, voted=counts.A+counts.B+counts.C;
+ const highest=Math.max(...Object.values(counts));
+ const leaders=Object.keys(counts).filter(k=>counts[k]===highest);
+ const points={};
+ let situation='Waiting for votes';
+ // Live hypothetical: treat the votes submitted so far as the complete electorate.
+ // Unvoted players have no projected points. This NEVER changes the official
+ // rule: all registered players must vote to receive points on closing.
+ if(voted>=2){
+  if(highest===voted){
+   situation='Perfect cooperation';
+   players.filter(p=>p.vote).forEach(p=>points[p.id]=100);
+  }else if(highest===voted-1&&leaders.length===1){
+   situation='Perfect betrayal';
+   players.filter(p=>p.vote).forEach(p=>points[p.id]=p.vote===leaders[0]?20:200);
+  }else if(leaders.length===1&&highest>voted/2){
+   situation='Failed betrayal';
+   players.filter(p=>p.vote).forEach(p=>points[p.id]=p.vote===leaders[0]?0:-50);
+  }else{
+   situation='Complete breakdown';
+   players.filter(p=>p.vote).forEach(p=>points[p.id]=0);
+  }
+ }
+ return {counts,voted,total,points,situation,ready:voted===total&&total>=2,projectionReady:voted>=2};
+}
 function publicState(){const calc=calculate();return {phase:game.phase,round:game.round,leader:game.leader,announcement:game.announcement,players:Object.values(game.players).map(p=>({id:p.id,name:p.name,vote:p.vote,score:p.score,projected:calc.points[p.id]??null})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)),history:game.history,calc};}
 function emit(){io.emit('state',publicState());save();}
 app.get('/host',(_,res)=>res.sendFile(path.join(__dirname,'public','host.html')));
