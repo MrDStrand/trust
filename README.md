@@ -41,3 +41,12 @@ Deploy this directory to a Node.js hosting service that supports persistent Sock
 - Daniel Strand host dashboard: `https://YOUR-SERVICE.onrender.com/host`
 - The host enters `HOST_KEY` in the host dashboard. The player page does not display host controls.
 - After committing these files to GitHub, Render redeploys the updated site (if auto-deploy is enabled).
+
+## Export results (Game Master)
+
+Open `/host` and scroll to **Export game results**. **Download scoreboard CSV** exports current rankings, scores, current votes and provisional points, even mid-round. **Download round history CSV** exports every completed round's individual votes and points. CSV files open in Excel; the exports are downloaded to your browser and are useful backups before a Render restart. These are snapshots, not automatic cloud backups.
+
+## 3-second closing countdown
+Daniel's host dashboard has a second close button, **Close with 3-second countdown**. It broadcasts a prominent 3-2-1 banner to all connected players. Voting and vote changes remain possible until the server-side deadline, then the server closes and scores the round automatically. **Close immediately** remains available, including during the countdown. Refreshing a page during countdown restores the remaining time. Server restart during countdown interrupts the timer; do not redeploy mid-round.
+
+When any registered player has not voted, the completed round awards zero points (consistent with the existing on-screen rules). Live hypothetical projections remain visible.
