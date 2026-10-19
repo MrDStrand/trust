@@ -66,3 +66,7 @@ The player page now shows three side-by-side columns on desktop: vertical voting
 - Live projected points always show the outcome if the round were closed now.
 
 For fewer than 15 registered players, unanimity does not trigger the +150 cooperation bonus. Register 15 players before the session.
+
+## 10-second blind countdown
+
+When the host chooses **Close with 10-second blind countdown**, the publicly visible votes, totals and projections are frozen immediately. Players who had already cast a vote may privately switch A/B/C or withdraw during the countdown; only their own screen acknowledges the change. Players without a vote when the countdown begins cannot cast one during those ten seconds. At the end, the server scores the final actual votes and reveals the results to everyone. Immediate close still closes without a countdown. All rounds use the same scoring (no final-round multiplier).
