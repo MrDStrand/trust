@@ -53,3 +53,16 @@ When any registered player has not voted, the completed round awards zero points
 
 ## Compact player layout
 The player page now shows three side-by-side columns on desktop: vertical voting buttons, current named votes and projected scores, and official leaderboard. Live vote/outcome and round history remain below. On small screens the columns stack for readability. No server changes are required for this layout.
+
+
+## Updated scoring rules
+
+- Exactly 15 votes on the same option: +150 each.
+- Exactly one vote on an option: +200 for that voter, even if other votes are split.
+- Largest voting group(s), unless unanimous: 0 each (ties are all treated as largest).
+- Other voting groups with 2 or more players: -50 each.
+- No vote when the round closes: -25. Abstaining never blocks scoring.
+- Round 5 doubles all scores, including penalties.
+- Live projected points always show the outcome if the round were closed now.
+
+For fewer than 15 registered players, unanimity does not trigger the +150 cooperation bonus. Register 15 players before the session.

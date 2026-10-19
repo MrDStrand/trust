@@ -12,36 +12,27 @@ let game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'
 try {game=JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{}
 let closeTimer=null;
 function cancelCountdown(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}game.closeAt=null;}
-function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;cancelCountdown();const calc=calculate();const multiplier=game.round===5?2:1;const result={round:game.round,counts:calc.counts,situation:calc.ready?calc.situation:'Incomplete voting — no points',multiplier,awards:[]};for(const p of Object.values(game.players)){const points=calc.ready?(calc.points[p.id]||0)*multiplier:0;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
+function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;cancelCountdown();const calc=calculate();const multiplier=game.round===5?2:1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
 function save(){fs.writeFileSync(DATA,JSON.stringify(game,null,2));}
 function calculate(){
  const counts={A:0,B:0,C:0};
  const players=Object.values(game.players);
- players.forEach(p=>{if(p.vote)counts[p.vote]++});
+ players.forEach(p=>{if(p.vote&&Object.hasOwn(counts,p.vote))counts[p.vote]++});
  const total=players.length, voted=counts.A+counts.B+counts.C;
  const highest=Math.max(...Object.values(counts));
  const leaders=Object.keys(counts).filter(k=>counts[k]===highest);
+ const unanimous=total===15&&highest===15;
  const points={};
- let situation='Waiting for votes';
- // Live hypothetical: treat the votes submitted so far as the complete electorate.
- // Unvoted players have no projected points. This NEVER changes the official
- // rule: all registered players must vote to receive points on closing.
- if(voted>=2){
-  if(highest===voted){
-   situation='Perfect cooperation';
-   players.filter(p=>p.vote).forEach(p=>points[p.id]=100);
-  }else if(highest===voted-1&&leaders.length===1){
-   situation='Perfect betrayal';
-   players.filter(p=>p.vote).forEach(p=>points[p.id]=p.vote===leaders[0]?20:200);
-  }else if(leaders.length===1&&highest>voted/2){
-   situation='Failed betrayal';
-   players.filter(p=>p.vote).forEach(p=>points[p.id]=p.vote===leaders[0]?0:-50);
-  }else{
-   situation='Complete breakdown';
-   players.filter(p=>p.vote).forEach(p=>points[p.id]=0);
-  }
+ for(const p of players){
+  if(!p.vote)points[p.id]=-25;
+  else if(unanimous)points[p.id]=150;
+  else if(counts[p.vote]===1)points[p.id]=200;
+  else if(counts[p.vote]===highest)points[p.id]=0;
+  else points[p.id]=-50;
  }
- return {counts,voted,total,points,situation,ready:voted===total&&total>=2,projectionReady:voted>=2};
+ let situation=unanimous?'Perfect cooperation':voted===0?'No votes submitted':Object.values(counts).some(n=>n===1)?'Lone voter bonus':leaders.length>1?'Tied largest groups':'Majority and minority';
+ if(voted<total)situation+=' · '+(total-voted)+' abstaining';
+ return {counts,voted,total,points,situation,ready:total>0,projectionReady:total>0,abstaining:total-voted};
 }
 function publicState(){const calc=calculate();return {phase:game.phase,round:game.round,leader:game.leader,announcement:game.announcement,closeAt:game.closeAt||null,serverNow:Date.now(),players:Object.values(game.players).map(p=>({id:p.id,name:p.name,vote:p.vote,score:p.score,projected:calc.points[p.id]??null})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)),history:game.history,calc};}
 function emit(){io.emit('state',publicState());save();}
