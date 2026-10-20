@@ -4,7 +4,7 @@
 
 - **Open voting / Next round**: starts a round with public A/B/C voting.
 - **10-second blind countdown**: freezes visible votes and projections immediately and closes in 10 seconds.
-- **60-second countdown (last 10 blind)**: shows a visible countdown from 60; voting remains live and public for 50 seconds, then the final 10 seconds become blind.
+- **60-second countdown (last 30 blind)**: shows a visible countdown from 60; voting remains live and public for 30 seconds, then the final 30 seconds become blind.
 - **Secret Option D checkbox** (checked by default): when enabled, randomly selects up to three players who already voted before the blind phase to receive private Option D. When unchecked, no player receives D.
 - **Close immediately**: closes and scores without a blind comparison if no blind snapshot exists.
 

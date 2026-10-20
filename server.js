@@ -56,7 +56,7 @@ io.on('connection',socket=>{
  game.closeAt=Date.now()+seconds*1000;
  game.countdownStartedAt=Date.now();
  if(seconds===10){game.phase='timed';startBlind();}
- else {game.phase='timed';game.blindAt=game.closeAt-10000;closeTimer=setTimeout(()=>{startBlind();closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},10000);},50000);}
+ else {game.phase='timed';game.blindAt=game.closeAt-30000;closeTimer=setTimeout(()=>{startBlind();closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},30000);},30000);}
  if(seconds===10)closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},10000);
 }else if(action==='announce'){game.announcement=String(message||'').slice(0,240);}else if(action==='remove'){const id=String(message||'');if(['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Remove players only between rounds.'});delete game.players[id];}else if(action==='reset'){cancelCountdown();game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Game Master'};}else return reply(cb,{error:'Unknown action.'});reply(cb,{ok:true});emit();});
 });
