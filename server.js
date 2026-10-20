@@ -11,14 +11,15 @@ const PORT=process.env.PORT||3000;
 let game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Game Master'};
 try {game=JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{}
 let closeTimer=null;
-function cancelCountdown(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}game.closeAt=null;game.frozenState=null;game.countdownEligible=null;}
-function finishRound(){if(game.phase!=='open'&&game.phase!=='countdown')return;const frozen=game.phase==='countdown'&&game.frozenState?{counts:{...game.frozenState.calc.counts},voted:game.frozenState.calc.voted,abstaining:game.frozenState.calc.abstaining,players:game.frozenState.players.map(p=>({id:p.id,name:p.name,vote:p.vote,projected:p.projected}))}:null;cancelCountdown();const calc=calculate();const multiplier=1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,frozen,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
+function cancelCountdown(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}game.closeAt=null;game.frozenState=null;game.countdownEligible=null;game.secretDEligible=null;game.blindAt=null;game.countdownStartedAt=null;game.secretDSetting=null;}
+function startBlind(){if(game.phase!=='timed')return;game.frozenState=publicState();game.countdownEligible=Object.values(game.players).filter(p=>p.vote!==null).map(p=>p.id);game.secretDEligible=[];if(game.secretDSetting!==false){game.secretDEligible=[...game.countdownEligible];for(let i=game.secretDEligible.length-1;i>0;i--){const j=crypto.randomInt(i+1);[game.secretDEligible[i],game.secretDEligible[j]]=[game.secretDEligible[j],game.secretDEligible[i]];}game.secretDEligible=game.secretDEligible.slice(0,3);}game.phase='countdown';emit();}
+function finishRound(){if(!['open','timed','countdown'].includes(game.phase))return;const frozen=game.phase==='countdown'&&game.frozenState?{counts:{...game.frozenState.calc.counts},voted:game.frozenState.calc.voted,abstaining:game.frozenState.calc.abstaining,players:game.frozenState.players.map(p=>({id:p.id,name:p.name,vote:p.vote,projected:p.projected}))}:null;cancelCountdown();const calc=calculate();const multiplier=1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,frozen,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
 function save(){fs.writeFileSync(DATA,JSON.stringify(game,null,2));}
 function calculate(){
- const counts={A:0,B:0,C:0};
+ const counts={A:0,B:0,C:0,D:0};
  const players=Object.values(game.players);
  players.forEach(p=>{if(p.vote&&Object.hasOwn(counts,p.vote))counts[p.vote]++});
- const total=players.length, voted=counts.A+counts.B+counts.C;
+ const total=players.length, voted=counts.A+counts.B+counts.C+counts.D;
  const highest=Math.max(...Object.values(counts));
  const leaders=Object.keys(counts).filter(k=>counts[k]===highest);
  const unanimous=voted>0&&highest===voted;
@@ -35,18 +36,29 @@ function calculate(){
  return {counts,voted,total,points,situation,ready:total>0,projectionReady:total>0,abstaining:total-voted};
 }
 function publicState(){if(game.phase==='countdown'&&game.frozenState)return {...game.frozenState,phase:'countdown',closeAt:game.closeAt,serverNow:Date.now(),countdownEligible:game.countdownEligible||[]};const calc=calculate();return {phase:game.phase,round:game.round,leader:game.leader,announcement:game.announcement,closeAt:game.closeAt||null,serverNow:Date.now(),players:Object.values(game.players).map(p=>({id:p.id,name:p.name,vote:p.vote,score:p.score,projected:calc.points[p.id]??null})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)),history:game.history,calc};}
-function emit(){io.emit('state',publicState());save();}
+function stateFor(socket){const state=publicState();if(state.phase==='countdown')state.secretDEnabled=!!(socket.data.playerId&&(game.secretDEligible||[]).includes(socket.data.playerId));return state;}
+function sendState(socket){socket.emit('state',stateFor(socket));}
+function emit(){for(const socket of io.sockets.sockets.values())sendState(socket);save();}
 app.get('/host',(_,res)=>res.sendFile(path.join(__dirname,'public','host.html')));
 app.use(express.static(path.join(__dirname,'public')));
 app.get('/health',(_,res)=>res.json({ok:true}));
 function reply(cb,obj){if(typeof cb==='function')cb(obj);}
 function cleanName(name){return String(name||'').trim().replace(/[<>]/g,'').slice(0,35);}
 io.on('connection',socket=>{
- socket.emit('state',publicState());
+ sendState(socket);
  socket.on('join',({name,id},cb)=>{name=cleanName(name);if(!name)return reply(cb,{error:'Please enter a name.'});const existing=Object.values(game.players).find(p=>p.name.toLowerCase()===name.toLowerCase());if(existing&&existing.id!==id)return reply(cb,{error:'That name is already taken.'});if(id&&game.players[id]){if(game.players[id].name!==name)return reply(cb,{error:'This device is registered under another name.'});socket.data.playerId=id;reply(cb,{ok:true,id});return emit();}if(game.phase!=='waiting'&&game.phase!=='closed')return reply(cb,{error:'Join between rounds, please.'});const newId=crypto.randomUUID();game.players[newId]={id:newId,name,vote:null,score:0};socket.data.playerId=newId;reply(cb,{ok:true,id:newId});emit();});
- socket.on('resume',({id})=>{if(game.players[id])socket.data.playerId=id;socket.emit('state',publicState());});
- socket.on('vote',({option},cb)=>{const id=socket.data.playerId;if(!id||!game.players[id])return reply(cb,{error:'Join first.'});if(game.phase!=='open'&&game.phase!=='countdown')return reply(cb,{error:'Voting is closed.'});if(!['A','B','C',null].includes(option))return reply(cb,{error:'Invalid vote.'});if(game.phase==='countdown'&&!(game.countdownEligible||[]).includes(id))return reply(cb,{error:'You had not voted before the blind countdown began.'});game.players[id].vote=option;reply(cb,{ok:true,option});if(game.phase!=='countdown')emit();else save();});
- socket.on('host',({key,action,message},cb)=>{if(key!==HOST_KEY)return reply(cb,{error:'Incorrect host key.'});if(action==='open'){if(game.phase==='open'||game.phase==='countdown')return reply(cb,{error:'Voting is already open.'});cancelCountdown();if(game.phase==='closed'){game.round++;for(const p of Object.values(game.players))p.vote=null;}game.phase='open';}else if(action==='close'){if(game.phase!=='open'&&game.phase!=='countdown')return reply(cb,{error:'Voting is not open.'});finishRound();return reply(cb,{ok:true});}else if(action==='countdown'){if(game.phase!=='open')return reply(cb,{error:'Voting must be open to start the countdown.'});game.frozenState=publicState();game.countdownEligible=Object.values(game.players).filter(p=>p.vote!==null).map(p=>p.id);game.phase='countdown';game.closeAt=Date.now()+10000;closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},10000);}else if(action==='announce'){game.announcement=String(message||'').slice(0,240);}else if(action==='remove'){const id=String(message||'');if(game.phase==='open'||game.phase==='countdown')return reply(cb,{error:'Remove players only between rounds.'});delete game.players[id];}else if(action==='reset'){cancelCountdown();game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Game Master'};}else return reply(cb,{error:'Unknown action.'});reply(cb,{ok:true});emit();});
+ socket.on('resume',({id})=>{if(game.players[id])socket.data.playerId=id;sendState(socket);});
+ socket.on('vote',({option},cb)=>{const id=socket.data.playerId;if(!id||!game.players[id])return reply(cb,{error:'Join first.'});if(!['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Voting is closed.'});if(!['A','B','C','D',null].includes(option))return reply(cb,{error:'Invalid vote.'});if(game.phase==='countdown'&&!(game.countdownEligible||[]).includes(id))return reply(cb,{error:'You had not voted before the blind countdown began.'});if(option==='D'&&(game.phase!=='countdown'||!(game.secretDEligible||[]).includes(id)))return reply(cb,{error:'Option D is not available to you.'});game.players[id].vote=option;reply(cb,{ok:true,option});if(game.phase!=='countdown')emit();else save();});
+ socket.on('host',({key,action,message,secretD},cb)=>{if(key!==HOST_KEY)return reply(cb,{error:'Incorrect host key.'});if(action==='open'){if(['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Voting is already open.'});cancelCountdown();if(game.phase==='closed'){game.round++;for(const p of Object.values(game.players))p.vote=null;}game.phase='open';}else if(action==='close'){if(!['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Voting is not open.'});finishRound();return reply(cb,{ok:true});}else if(action==='countdown'||action==='countdown60'){
+ if(game.phase!=='open')return reply(cb,{error:'Voting must be open to start the countdown.'});
+ const seconds=action==='countdown60'?60:10;
+ game.secretDSetting=secretD!==false;
+ game.closeAt=Date.now()+seconds*1000;
+ game.countdownStartedAt=Date.now();
+ if(seconds===10){game.phase='timed';startBlind();}
+ else {game.phase='timed';game.blindAt=game.closeAt-10000;closeTimer=setTimeout(()=>{startBlind();closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},10000);},50000);}
+ if(seconds===10)closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},10000);
+}else if(action==='announce'){game.announcement=String(message||'').slice(0,240);}else if(action==='remove'){const id=String(message||'');if(['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Remove players only between rounds.'});delete game.players[id];}else if(action==='reset'){cancelCountdown();game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Game Master'};}else return reply(cb,{error:'Unknown action.'});reply(cb,{ok:true});emit();});
 });
-if(game.phase==='countdown'){game.phase='closed';game.closeAt=null;game.frozenState=null;game.countdownEligible=null;}
+if(game.phase==='countdown'||game.phase==='timed'){game.phase='closed';game.closeAt=null;game.frozenState=null;game.countdownEligible=null;game.secretDEligible=null;game.blindAt=null;game.countdownStartedAt=null;game.secretDSetting=null;}
 server.listen(PORT,()=>console.log(`Game running on http://localhost:${PORT}`));
