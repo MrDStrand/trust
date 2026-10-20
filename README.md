@@ -1,6 +1,6 @@
 # Don't Trust Your Teammates — Live
 
-A live multiplayer voting game hosted by **Daniel Strand**. No player logins: participants register a name once in their browser.
+A live multiplayer voting game hosted by **Game Master**. No player logins: participants register a name once in their browser.
 
 ## Quick start
 
@@ -9,7 +9,7 @@ A live multiplayer voting game hosted by **Daniel Strand**. No player logins: pa
 3. Set a private host key and start:
    - macOS/Linux: `HOST_KEY='your-long-secret' npm start`
    - Windows PowerShell: `$env:HOST_KEY='your-long-secret'; npm start`
-4. Open `http://localhost:3000/host` for Daniel's control page. Enter the host key.
+4. Open `http://localhost:3000/host` for the Game Master's control page. Enter the host key.
 5. Share `http://localhost:3000/` with players **only if they are on the same computer**. For remote participants, deploy the app to a public Node.js hosting service and share its HTTPS address.
 
 ## Hosting for a remote team
@@ -21,11 +21,11 @@ Deploy this directory to a Node.js hosting service that supports persistent Sock
 ## Gameplay
 
 - Players join with a unique name. Names and live votes are visible to everyone.
-- Daniel opens voting. Players can choose A, B or C, change their vote, or withdraw it until closing.
-- Live hypothetical projected points appear as soon as 2 players have voted, calculated among submitted votes only. Missing voters show no projection. This preview is explicitly labeled hypothetical: **the official rule is unchanged**. Daniel may close with missing votes, but in that case no one earns points for that round. This makes last-second withholding risky.
+- the Game Master opens voting. Players can choose A, B or C, change their vote, or withdraw it until closing.
+- Live hypothetical projected points appear as soon as 2 players have voted, calculated among submitted votes only. Missing voters show no projection. This preview is explicitly labeled hypothetical: **the official rule is unchanged**. the Game Master may close with missing votes, but in that case no one earns points for that round. This makes last-second withholding risky.
 - Scoring (for a full set of votes): unanimous = +100 each; exactly one dissenter = +200 dissenter, +20 others; unique absolute majority with 2+ dissenters = 0 majority, -50 others; otherwise 0 everyone.
 - Round 5 doubles all points.
-- Daniel can announce messages, remove players between rounds, and reset the game.
+- the Game Master can announce messages, remove players between rounds, and reset the game.
 - Closed rounds preserve scores and voting history; opening the next round clears current votes.
 
 ## Security & privacy notes
@@ -38,7 +38,7 @@ Deploy this directory to a Node.js hosting service that supports persistent Sock
 ## Dedicated Game Master page
 
 - Player link: `https://YOUR-SERVICE.onrender.com/`
-- Daniel Strand host dashboard: `https://YOUR-SERVICE.onrender.com/host`
+- Game Master host dashboard: `https://YOUR-SERVICE.onrender.com/host`
 - The host enters `HOST_KEY` in the host dashboard. The player page does not display host controls.
 - After committing these files to GitHub, Render redeploys the updated site (if auto-deploy is enabled).
 
@@ -47,7 +47,7 @@ Deploy this directory to a Node.js hosting service that supports persistent Sock
 Open `/host` and scroll to **Export game results**. **Download scoreboard CSV** exports current rankings, scores, current votes and provisional points, even mid-round. **Download round history CSV** exports every completed round's individual votes and points. CSV files open in Excel; the exports are downloaded to your browser and are useful backups before a Render restart. These are snapshots, not automatic cloud backups.
 
 ## 3-second closing countdown
-Daniel's host dashboard has a second close button, **Close with 3-second countdown**. It broadcasts a prominent 3-2-1 banner to all connected players. Voting and vote changes remain possible until the server-side deadline, then the server closes and scores the round automatically. **Close immediately** remains available, including during the countdown. Refreshing a page during countdown restores the remaining time. Server restart during countdown interrupts the timer; do not redeploy mid-round.
+the Game Master's host dashboard has a second close button, **Close with 3-second countdown**. It broadcasts a prominent 3-2-1 banner to all connected players. Voting and vote changes remain possible until the server-side deadline, then the server closes and scores the round automatically. **Close immediately** remains available, including during the countdown. Refreshing a page during countdown restores the remaining time. Server restart during countdown interrupts the timer; do not redeploy mid-round.
 
 When any registered player has not voted, the completed round awards zero points (consistent with the existing on-screen rules). Live hypothetical projections remain visible.
 
@@ -74,7 +74,7 @@ When the host chooses **Close with 10-second blind countdown**, the publicly vis
 
 ## Blind countdown before/after comparison
 
-When Daniel starts the 10-second countdown, the server saves a snapshot of every player's vote and projected points. During the countdown all public views, including the host dashboard, show only this frozen snapshot. Only people who voted before the countdown can privately change or withdraw their vote. When the countdown ends, the server reveals final votes and awards. Both pages then show a **Blind countdown: frozen vs final** table with the original vote, original projected points, final vote, actual awarded points, and a change indicator for each player. The comparison remains visible while the round is closed; it is also stored in round history data. Rounds closed immediately have no blind comparison.
+When the Game Master starts the 10-second countdown, the server saves a snapshot of every player's vote and projected points. During the countdown all public views, including the host dashboard, show only this frozen snapshot. Only people who voted before the countdown can privately change or withdraw their vote. When the countdown ends, the server reveals final votes and awards. Both pages then show a **Blind countdown: frozen vs final** table with the original vote, original projected points, final vote, actual awarded points, and a change indicator for each player. The comparison remains visible while the round is closed; it is also stored in round history data. Rounds closed immediately have no blind comparison.
 
 
 Player voting panel: A/B/C buttons and withdraw control are hidden when voting is not active. During open voting and the 10-second blind countdown, the panel has a bright near-white background and high-contrast controls. Countdown eligibility restrictions are unchanged.
