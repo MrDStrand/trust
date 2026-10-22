@@ -1,64 +1,32 @@
-const express=require('express');
-const http=require('http');
-const {Server}=require('socket.io');
-const fs=require('fs');
-const path=require('path');
-const crypto=require('crypto');
-const app=express(); const server=http.createServer(app); const io=new Server(server);
-const DATA=process.env.DATA_FILE||path.join(__dirname,'game-data.json');
-const HOST_KEY=process.env.HOST_KEY||'change-this-host-key';
-const PORT=process.env.PORT||3000;
-let game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Game Master'};
-try {game=JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{}
-let closeTimer=null;
-function cancelCountdown(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}game.closeAt=null;game.frozenState=null;game.countdownEligible=null;game.secretDEligible=null;game.blindAt=null;game.countdownStartedAt=null;game.secretDSetting=null;}
-function startBlind(){if(game.phase!=='timed')return;game.frozenState=publicState();game.countdownEligible=Object.values(game.players).filter(p=>p.vote!==null).map(p=>p.id);game.secretDEligible=[];if(game.secretDSetting!==false){game.secretDEligible=[...game.countdownEligible];for(let i=game.secretDEligible.length-1;i>0;i--){const j=crypto.randomInt(i+1);[game.secretDEligible[i],game.secretDEligible[j]]=[game.secretDEligible[j],game.secretDEligible[i]];}game.secretDEligible=game.secretDEligible.slice(0,3);}game.phase='countdown';emit();}
-function finishRound(){if(!['open','timed','countdown'].includes(game.phase))return;const frozen=game.phase==='countdown'&&game.frozenState?{counts:{...game.frozenState.calc.counts},voted:game.frozenState.calc.voted,abstaining:game.frozenState.calc.abstaining,players:game.frozenState.players.map(p=>({id:p.id,name:p.name,vote:p.vote,projected:p.projected}))}:null;cancelCountdown();const calc=calculate();const multiplier=1;const result={round:game.round,counts:calc.counts,situation:calc.situation,multiplier,frozen,awards:[]};for(const p of Object.values(game.players)){const points=(calc.points[p.id]??0)*multiplier;p.score+=points;result.awards.push({name:p.name,vote:p.vote,points});}game.history.unshift(result);game.phase='closed';emit();}
+'use strict';
+const express=require('express'),http=require('http'),{Server}=require('socket.io'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+const app=express(),server=http.createServer(app),io=new Server(server);
+const DATA=process.env.DATA_FILE||path.join(__dirname,'game-data.json'),HOST_KEY=process.env.HOST_KEY||'change-this-host-key';
+const fresh=()=>({phase:'waiting',round:1,players:{},history:[],announcement:'',secretD:true,closeAt:null,blindAt:null,eligible:[],dEligible:[],frozen:null});
+let game=fresh();try{game={...fresh(),...JSON.parse(fs.readFileSync(DATA,'utf8'))};}catch{}
+for(const p of Object.values(game.players)){p.team=p.team==='Red'?'Red':'Blue';p.score=Number(p.score)||0;p.vote=p.vote||null;}
+let timer=null;const teams=['Blue','Red'];
+const members=t=>Object.values(game.players).filter(p=>p.team===t);
+function calculate(t){const ps=members(t),counts={A:0,B:0,C:0,D:0};for(const p of ps)if(Object.hasOwn(counts,p.vote))counts[p.vote]++;const voted=Object.values(counts).reduce((a,b)=>a+b,0),max=Math.max(...Object.values(counts)),unanimous=voted>0&&max===voted,points={};for(const p of ps)points[p.id]=!p.vote?-25:unanimous?150:counts[p.vote]===1?200:counts[p.vote]===max?0:-50;return {counts,voted,total:ps.length,abstaining:ps.length-voted,points,situation:unanimous?'Unanimous':voted===0?'No votes':'Split votes'};}
+function calcAll(){return Object.fromEntries(teams.map(t=>[t,calculate(t)]));}
+function totals(){return Object.fromEntries(teams.map(t=>[t,members(t).reduce((s,p)=>s+p.score,0)]));}
+function snapshot(){const calc=calcAll();return {calc,players:Object.values(game.players).map(p=>({id:p.id,name:p.name,team:p.team,vote:p.vote,projected:calc[p.team].points[p.id]}))};}
 function save(){fs.writeFileSync(DATA,JSON.stringify(game,null,2));}
-function calculate(){
- const counts={A:0,B:0,C:0,D:0};
- const players=Object.values(game.players);
- players.forEach(p=>{if(p.vote&&Object.hasOwn(counts,p.vote))counts[p.vote]++});
- const total=players.length, voted=counts.A+counts.B+counts.C+counts.D;
- const highest=Math.max(...Object.values(counts));
- const leaders=Object.keys(counts).filter(k=>counts[k]===highest);
- const unanimous=voted>0&&highest===voted;
- const points={};
- for(const p of players){
-  if(!p.vote)points[p.id]=-25;
-  else if(unanimous)points[p.id]=150;
-  else if(counts[p.vote]===1)points[p.id]=200;
-  else if(counts[p.vote]===highest)points[p.id]=0;
-  else points[p.id]=-50;
- }
- let situation=unanimous?'Perfect cooperation':voted===0?'No votes submitted':Object.values(counts).some(n=>n===1)?'Lone voter bonus':leaders.length>1?'Tied largest groups':'Majority and minority';
- if(voted<total)situation+=' · '+(total-voted)+' abstaining';
- return {counts,voted,total,points,situation,ready:total>0,projectionReady:total>0,abstaining:total-voted};
-}
-function publicState(){if(game.phase==='countdown'&&game.frozenState)return {...game.frozenState,phase:'countdown',closeAt:game.closeAt,serverNow:Date.now(),countdownEligible:game.countdownEligible||[]};const calc=calculate();return {phase:game.phase,round:game.round,leader:game.leader,announcement:game.announcement,closeAt:game.closeAt||null,serverNow:Date.now(),players:Object.values(game.players).map(p=>({id:p.id,name:p.name,vote:p.vote,score:p.score,projected:calc.points[p.id]??null})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)),history:game.history,calc};}
-function stateFor(socket){const state=publicState();if(state.phase==='countdown')state.secretDEnabled=!!(socket.data.playerId&&(game.secretDEligible||[]).includes(socket.data.playerId));return state;}
-function sendState(socket){socket.emit('state',stateFor(socket));}
-function emit(){for(const socket of io.sockets.sockets.values())sendState(socket);save();}
-app.get('/host',(_,res)=>res.sendFile(path.join(__dirname,'public','host.html')));
-app.use(express.static(path.join(__dirname,'public')));
-app.get('/health',(_,res)=>res.json({ok:true}));
-function reply(cb,obj){if(typeof cb==='function')cb(obj);}
-function cleanName(name){return String(name||'').trim().replace(/[<>]/g,'').slice(0,35);}
+function view(socket){const id=socket.data.playerId,me=game.players[id],host=socket.data.isHost;let snap=game.phase==='blind'&&game.frozen?game.frozen:snapshot();const players=snap.players.map(p=>({...p,score:game.players[p.id]?.score||0,banked:game.players[p.id]?.banked??null,done:game.players[p.id]?.done??null}));const visible=players.map(p=>{if(host||!me||p.team===me.team||['gamble','closed'].includes(game.phase))return p;return {...p,vote:null,projected:null};});let calc=snap.calc;if(me&&!host&&!['gamble','closed'].includes(game.phase))calc={...calc,[me.team==='Blue'?'Red':'Blue']:null};return {phase:game.phase,round:game.round,announcement:game.announcement,closeAt:game.closeAt,blindAt:game.blindAt,serverNow:Date.now(),players:visible,calc,totals:totals(),history:game.history,me:id||null,eligible:game.phase==='blind'?(game.eligible||[]).includes(id):true,secretD:game.phase==='blind'&&(game.dEligible||[]).includes(id),secretDSetting:host?game.secretD:undefined,roundAwards:game.phase==='gamble'||game.phase==='closed'?game.currentAwards:null};}
+function emit(){for(const s of io.sockets.sockets.values())s.emit('state',view(s));save();}
+function clearTimer(){if(timer)clearTimeout(timer);timer=null;game.closeAt=null;game.blindAt=null;}
+function closeVoting(){if(!['open','blind','livecountdown'].includes(game.phase))return;const frozen=game.frozen;clearTimer();const calc=calcAll();game.currentAwards=Object.fromEntries(Object.values(game.players).map(p=>[p.id,{id:p.id,name:p.name,team:p.team,vote:p.vote,base:calc[p.team].points[p.id],banked:calc[p.team].points[p.id],attempts:0,done:calc[p.team].points[p.id]<=0,rolls:[]}]));for(const p of Object.values(game.players)){p.banked=game.currentAwards[p.id].banked;p.done=game.currentAwards[p.id].done;}game.pendingResult={round:game.round,calc,frozen};game.phase='gamble';emit();}
+function endGamble(){if(game.phase!=='gamble')return;for(const p of Object.values(game.players)){const a=game.currentAwards[p.id];a.done=true;p.done=true;p.score+=a.banked;}const result={...game.pendingResult,awards:Object.values(game.currentAwards).map(a=>({...a})),teamPoints:Object.fromEntries(teams.map(t=>[t,Object.values(game.currentAwards).filter(a=>a.team===t).reduce((s,a)=>s+a.banked,0)]))};game.history.unshift(result);game.currentAwards=null;game.pendingResult=null;game.phase='closed';emit();}
+function scheduleBlind(ms){clearTimer();game.phase='blind';game.frozen=snapshot();game.eligible=Object.values(game.players).filter(p=>p.vote).map(p=>p.id);game.dEligible=[];if(game.secretD)for(const t of teams){const ids=members(t).filter(p=>p.vote).map(p=>p.id);for(let i=ids.length-1;i>0;i--){const j=crypto.randomInt(i+1);[ids[i],ids[j]]=[ids[j],ids[i]];}game.dEligible.push(...ids.slice(0,3));}game.closeAt=Date.now()+ms;timer=setTimeout(closeVoting,ms);emit();}
+app.get('/host',(_,res)=>res.sendFile(path.join(__dirname,'public','host.html')));app.use(express.static(path.join(__dirname,'public')));app.get('/health',(_,res)=>res.json({ok:true}));
+const reply=(cb,data)=>{if(typeof cb==='function')cb(data);};
 io.on('connection',socket=>{
- sendState(socket);
- socket.on('join',({name,id},cb)=>{name=cleanName(name);if(!name)return reply(cb,{error:'Please enter a name.'});const existing=Object.values(game.players).find(p=>p.name.toLowerCase()===name.toLowerCase());if(existing&&existing.id!==id)return reply(cb,{error:'That name is already taken.'});if(id&&game.players[id]){if(game.players[id].name!==name)return reply(cb,{error:'This device is registered under another name.'});socket.data.playerId=id;reply(cb,{ok:true,id});return emit();}if(game.phase!=='waiting'&&game.phase!=='closed')return reply(cb,{error:'Join between rounds, please.'});const newId=crypto.randomUUID();game.players[newId]={id:newId,name,vote:null,score:0};socket.data.playerId=newId;reply(cb,{ok:true,id:newId});emit();});
- socket.on('resume',({id})=>{if(game.players[id])socket.data.playerId=id;sendState(socket);});
- socket.on('vote',({option},cb)=>{const id=socket.data.playerId;if(!id||!game.players[id])return reply(cb,{error:'Join first.'});if(!['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Voting is closed.'});if(!['A','B','C','D',null].includes(option))return reply(cb,{error:'Invalid vote.'});if(game.phase==='countdown'&&!(game.countdownEligible||[]).includes(id))return reply(cb,{error:'You had not voted before the blind countdown began.'});if(option==='D'&&(game.phase!=='countdown'||!(game.secretDEligible||[]).includes(id)))return reply(cb,{error:'Option D is not available to you.'});game.players[id].vote=option;reply(cb,{ok:true,option});if(game.phase!=='countdown')emit();else save();});
- socket.on('host',({key,action,message,secretD},cb)=>{if(key!==HOST_KEY)return reply(cb,{error:'Incorrect host key.'});if(action==='open'){if(['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Voting is already open.'});cancelCountdown();if(game.phase==='closed'){game.round++;for(const p of Object.values(game.players))p.vote=null;}game.phase='open';}else if(action==='close'){if(!['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Voting is not open.'});finishRound();return reply(cb,{ok:true});}else if(action==='countdown'||action==='countdown60'){
- if(game.phase!=='open')return reply(cb,{error:'Voting must be open to start the countdown.'});
- const seconds=action==='countdown60'?60:10;
- game.secretDSetting=secretD!==false;
- game.closeAt=Date.now()+seconds*1000;
- game.countdownStartedAt=Date.now();
- if(seconds===10){game.phase='timed';startBlind();}
- else {game.phase='timed';game.blindAt=game.closeAt-30000;closeTimer=setTimeout(()=>{startBlind();closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},30000);},30000);}
- if(seconds===10)closeTimer=setTimeout(()=>{closeTimer=null;finishRound();},10000);
-}else if(action==='announce'){game.announcement=String(message||'').slice(0,240);}else if(action==='remove'){const id=String(message||'');if(['open','timed','countdown'].includes(game.phase))return reply(cb,{error:'Remove players only between rounds.'});delete game.players[id];}else if(action==='reset'){cancelCountdown();game={phase:'waiting',round:1,players:{},history:[],announcement:'',leader:'Game Master'};}else return reply(cb,{error:'Unknown action.'});reply(cb,{ok:true});emit();});
+ socket.emit('state',view(socket));
+ socket.on('resume',({id}={})=>{if(game.players[id])socket.data.playerId=id;socket.emit('state',view(socket));});
+ socket.on('join',({name,id}={},cb)=>{name=String(name||'').trim().replace(/[<>]/g,'').slice(0,35);if(!name)return reply(cb,{error:'Enter your name.'});if(game.players[id]&&game.players[id].name===name){socket.data.playerId=id;reply(cb,{ok:true,id});return emit();}if(Object.values(game.players).some(p=>p.name.toLowerCase()===name.toLowerCase()))return reply(cb,{error:'Name already in use.'});if(!['waiting','closed'].includes(game.phase))return reply(cb,{error:'Join between rounds.'});const counts=teams.map(t=>members(t).length),team=counts[0]<=counts[1]?'Blue':'Red',newId=crypto.randomUUID();game.players[newId]={id:newId,name,team,score:0,vote:null};socket.data.playerId=newId;reply(cb,{ok:true,id:newId});emit();});
+ socket.on('vote',({option}={},cb)=>{const p=game.players[socket.data.playerId];if(!p)return reply(cb,{error:'Join first.'});if(!['open','blind','livecountdown'].includes(game.phase))return reply(cb,{error:'Voting is closed.'});if(!['A','B','C','D',null].includes(option))return reply(cb,{error:'Invalid option.'});if(game.phase==='blind'&&!(game.eligible||[]).includes(p.id))return reply(cb,{error:'You must vote before the blind phase.'});if(option==='D'&&!(game.phase==='blind'&&(game.dEligible||[]).includes(p.id)))return reply(cb,{error:'D is not available.'});p.vote=option;reply(cb,{ok:true,option});if(game.phase!=='blind')emit();else save();});
+ socket.on('gamble',({choice}={},cb)=>{const p=game.players[socket.data.playerId];if(!p||game.phase!=='gamble')return reply(cb,{error:'Gambling is not open.'});const a=game.currentAwards[p.id];if(a.done||a.banked<=0)return reply(cb,{error:'No active winnings to risk.'});if(choice==='bank'){a.done=true;p.done=true;reply(cb,{ok:true,banked:a.banked});emit();return;}if(!['even','odd'].includes(choice))return reply(cb,{error:'Choose even or odd.'});const number=crypto.randomInt(1,101),win=(number%2===0)===(choice==='even');a.attempts++;a.banked=win?a.banked*2:0;a.rolls.push({number,choice,win});if(!win)a.done=true;p.banked=a.banked;p.done=a.done;reply(cb,{ok:true,number,win,banked:a.banked,done:a.done});emit();});
+ socket.on('host',({key,action,message}={},cb)=>{if(key!==HOST_KEY)return reply(cb,{error:'Incorrect host key.'});socket.data.isHost=true;let error=null;const active=['open','blind','livecountdown','gamble'].includes(game.phase);if(action==='auth'){/* authenticate this socket */}else if(action==='open'){if(active||game.phase==='livecountdown')error='Finish the current phase first.';else if(game.phase==='closed'&&game.round>=5)error='Five rounds complete. Reset for a new game.';else{if(game.phase==='closed')game.round++;for(const p of Object.values(game.players)){p.vote=null;p.banked=null;p.done=null;}game.frozen=null;game.eligible=[];game.dEligible=[];game.phase='open';}}else if(action==='close'){if(['open','blind','livecountdown'].includes(game.phase))closeVoting();else error='Voting is not open.';}else if(action==='countdown10'||action==='countdown60'){if(game.phase!=='open')error='Open voting first.';else if(action==='countdown10')scheduleBlind(10000);else{game.phase='livecountdown';game.closeAt=Date.now()+60000;game.blindAt=Date.now()+30000;timer=setTimeout(()=>scheduleBlind(30000),30000);}}else if(action==='finishGamble'){if(game.phase==='gamble')endGamble();else error='Not in Double or Nothing phase.';}else if(action==='team'){if(active||game.phase==='livecountdown')error='Teams are locked during rounds.';else if(!game.players[message?.id]||!teams.includes(message?.team))error='Invalid player/team.';else game.players[message.id].team=message.team;}else if(action==='balance'){if(active||game.phase==='livecountdown')error='Teams are locked during rounds.';else{const ids=Object.keys(game.players);for(let i=ids.length-1;i>0;i--){const j=crypto.randomInt(i+1);[ids[i],ids[j]]=[ids[j],ids[i]];}ids.forEach((id,i)=>game.players[id].team=teams[i%2]);}}else if(action==='secretD'){if(active||game.phase==='livecountdown')error='Change setting between rounds.';else game.secretD=!!message;}else if(action==='announce'){game.announcement=String(message||'').slice(0,240);}else if(action==='remove'){if(active||game.phase==='livecountdown')error='Remove between rounds.';else delete game.players[message];}else if(action==='reset'){clearTimer();game=fresh();}else error='Unknown action.';if(error)return reply(cb,{error});reply(cb,{ok:true});emit();});
 });
-if(game.phase==='countdown'||game.phase==='timed'){game.phase='closed';game.closeAt=null;game.frozenState=null;game.countdownEligible=null;game.secretDEligible=null;game.blindAt=null;game.countdownStartedAt=null;game.secretDSetting=null;}
-server.listen(PORT,()=>console.log(`Game running on http://localhost:${PORT}`));
+if(['open','blind','livecountdown','gamble'].includes(game.phase)){if(game.phase==='gamble'&&game.currentAwards){/* preserve pending winnings after a server restart */}else{game.phase='closed';clearTimer();}}
+server.listen(process.env.PORT||3000,()=>console.log('Team Wars server ready'));
