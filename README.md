@@ -24,3 +24,7 @@
 ## Important
 
 This is an in-memory real-time game with JSON persistence. Render ephemeral filesystem storage can be lost on redeploy/restart; use persistent disk or external storage for durable records. A browser's player ID is stored in localStorage; avoid sharing browsers during a game. Set a strong HOST_KEY. No voice chat is included.
+
+## KO visibility improvements
+- Players assigned KO see a prominent private notification immediately, before the superpower stage.
+- Round history shows each KO victim, the points removed, and the reset to zero. The holder identity is shown only to Game Master, not other players.
