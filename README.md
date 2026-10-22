@@ -35,3 +35,13 @@ This is an in-memory real-time game with JSON persistence. Render ephemeral file
 Before opening a round, the Game Master can select a **1x–20x multiplier** (whole numbers). The setting applies to that round's **voting points and penalties**: for example, unanimous +150 at 3x becomes +450, and an abstention −25 becomes −75. Double or Nothing starts from the multiplied positive award and continues to double normally. KO still sets the victim's full positive accumulated score to zero; it is not multiplied. Each completed round stores its multiplier in history and CSV export. The multiplier cannot be changed once voting has opened.
 
 Desktop player and host views use denser controls and scrollable history/player tables; the voting countdown is pinned to the top of the player viewport and visible while scrolling. On phones, the layout remains stacked and scrollable.
+
+## CHANGE secret superpower
+
+- The Game Master can grant or revoke CHANGE during open, live countdown, or blind voting.
+- CHANGE holders are notified privately when assigned. The phase occurs after voting closes and before Double or Nothing.
+- A holder may permanently override **one** vote (their own or any other player's, on either team) to A/B/C. D is allowed only when the target was eligible for secret D.
+- The selected replacement must differ from the current vote. Each holder may use CHANGE once per round. The override cannot be reversed through the regular voting interface.
+- Game Master presses **Finish CHANGE** to recalculate team-specific voting points and begin Double or Nothing. Unused CHANGE powers expire at round end.
+- Public history shows the target and old/new vote, not the secret holder. Game Master history and CSV include the CHANGE events.
+- Existing KO remains a separate post-gambling power. Player team score highlight remains in place.
