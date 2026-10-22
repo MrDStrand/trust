@@ -28,3 +28,10 @@ This is an in-memory real-time game with JSON persistence. Render ephemeral file
 ## KO visibility improvements
 - Players assigned KO see a prominent private notification immediately, before the superpower stage.
 - Round history shows each KO victim, the points removed, and the reset to zero. The holder identity is shown only to Game Master, not other players.
+
+
+## Round multiplier and compact layouts
+
+Before opening a round, the Game Master can select a **1x–20x multiplier** (whole numbers). The setting applies to that round's **voting points and penalties**: for example, unanimous +150 at 3x becomes +450, and an abstention −25 becomes −75. Double or Nothing starts from the multiplied positive award and continues to double normally. KO still sets the victim's full positive accumulated score to zero; it is not multiplied. Each completed round stores its multiplier in history and CSV export. The multiplier cannot be changed once voting has opened.
+
+Desktop player and host views use denser controls and scrollable history/player tables; the voting countdown is pinned to the top of the player viewport and visible while scrolling. On phones, the layout remains stacked and scrollable.
