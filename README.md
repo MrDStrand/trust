@@ -24,3 +24,7 @@
 ## Important
 
 This is an in-memory real-time game with JSON persistence. Render ephemeral filesystem storage can be lost on redeploy/restart; use persistent disk or external storage for durable records. A browser's player ID is stored in localStorage; avoid sharing browsers during a game. Set a strong HOST_KEY. No voice chat is included.
+
+
+## Superpower visibility and audit history
+During CHANGE, the power holder sees all players' current post-blind votes on both teams, including No vote. Other players do not gain cross-team visibility during CHANGE. Completed round history lists the CHANGE actor, target, before/after choice and the KO actor, target and total score reset. Game Master can export superpower actions as CSV. Historical rounds created before this release may only contain player IDs if those players have since left.
