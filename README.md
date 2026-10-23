@@ -28,3 +28,6 @@ This is an in-memory real-time game with JSON persistence. Render ephemeral file
 
 ## Superpower visibility and audit history
 During CHANGE, the power holder sees all players' current post-blind votes on both teams, including No vote. Other players do not gain cross-team visibility during CHANGE. Completed round history lists the CHANGE actor, target, before/after choice and the KO actor, target and total score reset. Game Master can export superpower actions as CSV. Historical rounds created before this release may only contain player IDs if those players have since left.
+
+
+Security update: The Game Master dashboard stays hidden until successful HOST_KEY authentication; unauthenticated Socket.IO clients receive no player or history data. Set a strong HOST_KEY in Render and redeploy. Remove old shared URLs/keys if exposed.
