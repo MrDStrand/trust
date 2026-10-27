@@ -5,6 +5,29 @@
 main{max-width:1480px;padding:8px 14px}h1{font-size:clamp(19px,2vw,27px);margin:2px 0}h2{font-size:16px;margin:0 0 6px}p{margin:5px 0;font-size:13px}.panel{padding:10px 12px;margin:6px 0;border-radius:10px}.grid{gap:8px}.top,.flex{gap:7px}.button{padding:7px 10px;font-size:13px}.vote{font-size:25px;padding:8px 18px}.score{font-size:25px}.team{padding:8px}.pill{padding:5px 9px;font-size:12px}.notice{padding:7px;margin-top:6px;font-size:12px}td,th{padding:5px 6px;font-size:12px}.timer{position:fixed;top:0;left:0;right:0;z-index:1000;border-radius:0;padding:8px;font-size:23px;box-shadow:0 3px 20px #000a}body:has(.timer:not(.hidden)) main{padding-top:54px}summary{cursor:pointer}.power-alert{padding:10px}.ko-history{font-size:12px}
 @media(min-width:900px){main>.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}main>.grid>.panel{min-width:0}#voteRows{font-size:12px}section:has(#leaders){max-height:230px;overflow:auto}section:has(#history){max-height:150px;overflow:auto}section:has(#voteRows){max-height:300px;overflow:auto}#gamble .flex{margin:7px 0!important}main>p:first-of-type{display:none}}
 @media(max-width:700px){main{padding:8px}.panel{padding:10px}.timer{font-size:20px}.vote{padding:9px 15px}}
+
+/* Dashboard restoration: desktop uses viewport-sized panels rather than a long page. */
+@media (min-width:900px) and (min-height:600px) {
+ html,body{height:100%;overflow:hidden}
+ main{height:100dvh;max-height:100dvh;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);grid-template-rows:auto auto auto minmax(160px,1fr) minmax(90px,.65fr) auto;gap:6px 10px;align-content:stretch;padding:7px 12px}
+ main>.top{grid-column:1/-1;min-height:0}main>p:not(.muted){display:none}
+ #join{grid-column:1/-1}#timer{grid-column:1/-1;margin:0;padding:6px;font-size:17px}
+ main>section.panel:has(#blueTeamCard){grid-column:1/-1;margin:0;padding:6px 10px}
+ main>section.panel:has(#blueTeamCard) h2{display:none}
+ main>section.panel:has(#blueTeamCard) .team{padding:4px 8px}
+ main>section.panel:has(#blueTeamCard) .score{font-size:22px;line-height:1.1}
+ main>.grid{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:10px;min-height:0}
+ main>.grid>.panel{min-height:0;overflow:auto;margin:0}
+ main>section.panel:has(#leaders){grid-column:1;grid-row:5;overflow:auto;min-height:0;margin:0}
+ main>section.panel:has(#history){grid-column:2;grid-row:5;overflow:auto;min-height:0;margin:0}
+ main>p.muted{grid-column:1/-1;margin:0;font-size:10px}
+ main>section.panel:not(:has(#leaders)):not(:has(#history)):not(:has(#blueTeamCard)):not(#join){grid-column:1/-1;margin:0;padding:7px 10px;max-height:150px;overflow:auto}
+ main>section.panel.hidden,main>div.hidden{display:none!important}
+ .panel h2{font-size:14px;margin:0 0 3px}.panel p{font-size:12px;margin:3px 0}
+ .vote{padding:7px 12px}td,th{padding:4px 6px;font-size:11px}
+ .notice{padding:5px 7px}.top{gap:6px}
+}
+@media (max-width:899px){main{padding:7px 9px}.panel{padding:8px 10px;margin:5px 0}h1{font-size:20px}.score{font-size:25px}}
 </style></head><body><main><div class="top"><div><small>LIVE SOCIAL STRATEGY · TEAM WARS</small><h1>DON'T TRUST YOUR TEAMMATES</h1></div><span id="status" class="pill">Connecting…</span></div><p>Win together. Betray individually. Then decide whether to double your winnings.</p>
 <section id="join" class="panel"><h2>Join the game</h2><div class="flex"><input id="name" maxlength="35" placeholder="Your name"><button class="button" id="joinBtn">Join →</button></div><p id="joinError" class="red"></p></section>
 <div id="timer" class="timer hidden" role="timer" aria-live="off"></div>
