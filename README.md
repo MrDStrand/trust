@@ -1,19 +1,33 @@
-# Don't Trust Your Teammates — clean rebuild
+# Don't Trust Your Teammates — Team Wars
 
-A new Node.js / Socket.IO implementation. No legacy host-page links or legacy code.
+## Deploy
 
-## Run
+1. Upload the contents of this folder to your GitHub repository (replace the old `server.js`, `public/index.html`, and `public/host.html`).
+2. On Render use Node, build command `npm install`, start command `npm start`.
+3. Set `HOST_KEY` in Render environment variables to a private, strong value.
+4. Visit `/` for players and `/host` for Game Master.
+5. **Reset the game before starting Team Wars** if you previously ran an older version. Old saved data is not migrated reliably.
 
-Node.js 20+. Run `npm install`, set `HOST_KEY` to a strong secret in your environment, then run `npm start`. Render: Node web service, build `npm install`, start `npm start`; set HOST_KEY in Render Environment. Do not commit the key.
+## Rules
 
-Player interface: `/` or `/player.html`. Game Master interface: `/gm.html` (no player-side link). The GM page itself is public but all GM-only actions and vote/power details are protected by server-side HOST_KEY authentication.
+- Players join by name and are auto-assigned to the smaller of Blue and Red. Game Master can manually assign or randomly balance before rounds.
+- Each team has independent A/B/C voting, vote counts and scoring. The other team's live votes are hidden from players; Game Master can see both.
+- Scoring per team: all participating voters choose the same option: +150 each; otherwise sole voter on an option +200, largest groups 0, other groups of 2+ -50; abstainers -25.
+- Five rounds; team winner has highest total points, summed from members' individual points.
+- Voting supports immediate close, 10-second blind countdown, or 60-second countdown (first 30 seconds live, last 30 blind).
+- During blind phase, public counts and projections freeze. Only players who voted before blind phase can change or withdraw. Optional secret D is offered to up to 3 eligible voters **per team**.
+- After voting, every player with positive round winnings may choose Even/Odd to risk **only current-round winnings**, with a fresh server-generated random integer 1–100 for each attempt. A win doubles, a loss sets current-round winnings to zero. They can repeat or bank whenever they like. Players with zero or negative awards skip gambling and retain their voting award.
+- No automatic gambling time limit. Game Master clicks **Close Double or Nothing & bank points** to apply all current-round winnings/penalties and advance.
+- Previous rounds' scores are never gambled. Results are persisted in `game-data.json` (or the `DATA_FILE` path).
+- Game Master can download team-aware CSV scoreboard and round results.
 
-## Rules implemented
+## Important
 
-Unlimited rounds, GM-controlled END GAME, team and individual winners including ties. Voting A/B/C (optional D), 10s/60s timers, secret SWAP assignment and one-use SWAP before voting closes, Double or Nothing, manual GM scoring with once-per-player-per-round protection. CHANGE and KO are running-order phases; their detailed effects are not implemented because their exact rules have not been supplied. Blind mode uses a 10-second timer but does not yet implement additional vote-visibility rules. Scores are derived from current player totals, so SWAP moves points between teams consistently.
+This is an in-memory real-time game with JSON persistence. Render ephemeral filesystem storage can be lost on redeploy/restart; use persistent disk or external storage for durable records. A browser's player ID is stored in localStorage; avoid sharing browsers during a game. Set a strong HOST_KEY. No voice chat is included.
 
-All game state is in memory: a Render restart resets the game. For production use with persistent live games, add storage. Only one Node server instance is supported.
 
-## Testing
+## Superpower visibility and audit history
+During CHANGE, the power holder sees all players' current post-blind votes on both teams, including No vote. Other players do not gain cross-team visibility during CHANGE. Completed round history lists the CHANGE actor, target, before/after choice and the KO actor, target and total score reset. Game Master can export superpower actions as CSV. Historical rounds created before this release may only contain player IDs if those players have since left.
 
-Run `npm run check` for syntax. Browser and multi-device testing are separate and required before live use.
+
+Security update: The Game Master dashboard stays hidden until successful HOST_KEY authentication; unauthenticated Socket.IO clients receive no player or history data. Set a strong HOST_KEY in Render and redeploy. Remove old shared URLs/keys if exposed.
