@@ -28,6 +28,37 @@ main{max-width:1480px;padding:8px 14px}h1{font-size:clamp(19px,2vw,27px);margin:
  .notice{padding:5px 7px}.top{gap:6px}
 }
 @media (max-width:899px){main{padding:7px 9px}.panel{padding:8px 10px;margin:5px 0}h1{font-size:20px}.score{font-size:25px}}
+
+/* Two-column laptop dashboard: left scores, right game actions. */
+@media(min-width:850px){
+ html,body{height:100%;overflow:hidden}
+ main{display:grid!important;grid-template-columns:minmax(285px,0.78fr) minmax(440px,1.22fr)!important;grid-template-rows:auto auto minmax(0,1fr) auto!important;gap:6px 10px!important;height:100dvh;max-height:100dvh;overflow:hidden!important;padding:7px 12px!important;max-width:none!important}
+ main>.top{grid-column:1/-1;grid-row:1;min-height:0}
+ main>.top small{display:none}main>.top h1{font-size:clamp(18px,2vw,25px);margin:0}
+ main>p:not(.muted){display:none!important}
+ #join{grid-column:1/-1!important;grid-row:2!important;margin:0!important;padding:5px 10px!important;display:flex;align-items:center;gap:12px;min-height:0}
+ #join h2{font-size:13px;white-space:nowrap;margin:0}#join .flex{flex:1}#join input{padding:5px 8px;font-size:13px;max-width:230px}#join #joinError{margin:0}
+ #join.hidden{display:none!important}
+ #timer{grid-column:1/-1!important;grid-row:2!important;position:static!important;padding:5px!important;font-size:16px!important}
+ body:has(.timer:not(.hidden)) main{padding-top:7px!important}
+ .dashboard-left,.dashboard-right{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden;grid-row:3}
+ .dashboard-left{grid-column:1}.dashboard-right{grid-column:2}
+ .dashboard-left>.panel,.dashboard-right>.panel,.dashboard-right>.grid{margin:0!important;min-height:0;max-height:none!important;overflow:visible}
+ .dashboard-left>.panel:has(#blueTeamCard){flex:0 0 auto;padding:8px!important}
+ .dashboard-left>.panel:has(#blueTeamCard) h2{display:block;font-size:13px;margin-bottom:4px}
+ .dashboard-left .team{padding:6px 8px!important;border-width:1px}.dashboard-left .team.my-team{border-width:3px}
+ .dashboard-left .score{font-size:25px!important}.dashboard-left .team small{font-size:11px}
+ .dashboard-left>.panel:has(#leaders){flex:1 1 50%;overflow:auto!important;max-height:none!important}
+ .dashboard-left>.panel:has(#history){flex:1 1 30%;overflow:auto!important;max-height:none!important}
+ .dashboard-right>.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px;flex:1 1 auto;overflow:hidden!important}
+ .dashboard-right>.grid>.panel{margin:0!important;overflow:auto!important;max-height:none!important}
+ .dashboard-right>.panel:not(.hidden){flex:0 0 auto;overflow:auto!important;max-height:30vh!important}
+ .dashboard-right .panel h2{font-size:14px;margin:0 0 4px}.dashboard-right .panel p{font-size:12px;margin:3px 0}
+ .dashboard-right .vote{padding:7px 12px;font-size:23px}.dashboard-right .notice{padding:5px}
+ main>p.muted{grid-column:1/-1;grid-row:4;margin:0!important;font-size:10px;line-height:12px}
+ .panel{padding:8px 10px!important}td,th{padding:4px 5px!important;font-size:11px}
+}
+@media(max-width:849px){.dashboard-left,.dashboard-right{display:contents}}
 </style></head><body><main><div class="top"><div><small>LIVE SOCIAL STRATEGY · TEAM WARS</small><h1>DON'T TRUST YOUR TEAMMATES</h1></div><span id="status" class="pill">Connecting…</span></div><p>Win together. Betray individually. Then decide whether to double your winnings.</p>
 <section id="join" class="panel"><h2>Join the game</h2><div class="flex"><input id="name" maxlength="35" placeholder="Your name"><button class="button" id="joinBtn">Join →</button></div><p id="joinError" class="red"></p></section>
 <div id="timer" class="timer hidden" role="timer" aria-live="off"></div>
@@ -36,7 +67,7 @@ main{max-width:1480px;padding:8px 14px}h1{font-size:clamp(19px,2vw,27px);margin:
 <section class="panel"><h2>Your team's live votes</h2><div id="counts" class="notice">Waiting…</div><table><thead><tr><th>Player</th><th>Vote</th><th>Projected</th></tr></thead><tbody id="voteRows"></tbody></table></section></div>
 <section id="gamble" class="panel hidden"><h2>🎲 Double or Nothing</h2><p>Only this round's positive winnings are at risk. Your earlier points are safe. No time limit.</p><div class="center"><small>Your unbanked round winnings</small><div id="stake" class="score green">0</div><p id="gambleInfo"></p></div><div id="gambleActions" class="center"><div class="flex" style="justify-content:center;margin:16px 0"><button class="button" id="even">Choose EVEN</button><button class="button" id="odd">Choose ODD</button><button class="button secondary" id="bank">Keep my points</button></div></div><div id="gambleResult" class="notice hidden"></div></section>
 <section id="swapPanel" class="panel power-alert hidden"><h2>🔀 SECRET SWAP</h2><p>Choose a player to exchange teams and accumulated points with before voting closes.</p><div class="flex"><select id="swapTarget"></select><button id="swapFire" class="button danger">Use SWAP</button></div><div id="swapNotice" class="notice"></div></section><section id="changeAssigned" class="panel power-alert hidden" role="status" aria-live="polite"><h2>🔁 SECRET SUPERPOWER ASSIGNED: CHANGE</h2><p style="color:#fff0c4">You have secretly received CHANGE! Be ready after blind voting and before Double or Nothing.</p><p id="changeAssignedStatus" style="color:#fff0c4"></p></section><section id="changePanel" class="panel hidden"><h2>🔁 CHANGE — One final vote override</h2><p>Choose yourself or any player, then choose their new vote. You can do this once. The override is final.</p><div class="flex"><select id="changeTarget"></select><select id="changeOption"></select><button class="button" id="changeFire">Apply CHANGE permanently</button></div><div id="changeNotice" class="notice"></div></section><section id="koAssigned" class="panel power-alert hidden" role="status" aria-live="polite"><h2>⚡ SECRET SUPERPOWER ASSIGNED: KNOCKOUT</h2><p style="color:#fff0c4">You have been secretly given KO by the Game Master. Keep it to yourself!</p><p id="koAssignedStatus" style="color:#fff0c4">Your power activates AFTER Double or Nothing. You can then knock another player with a positive total score down to 0.</p></section><section id="koPanel" class="panel hidden"><h2>⚡ Secret Superpower: KnockOut</h2><p id="koText">Your power is secret. Choose one other player with a positive total score and reduce their accumulated score to zero.</p><div class="flex"><select id="koTarget" style="padding:12px;background:#08162c;color:white;border:1px solid #607392;border-radius:9px"></select><button id="koFire" class="button danger">Use KnockOut</button></div><div id="koNotice" class="notice"></div></section><section class="panel"><h2>Individual leaderboard</h2><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Points</th></tr></thead><tbody id="leaders"></tbody></table></section>
-<section class="panel"><h2>Round history</h2><div id="history">No completed rounds.</div></section><p class="muted center">Hosted by Game Master · <a href="/host" style="color:#adc4ff">Host dashboard</a></p></main><script src="/socket.io/socket.io.js"></script><script>
+<section class="panel"><h2>Round history</h2><div id="history">No completed rounds.</div></section><p class="muted center">Hosted by Game Master · <a href="/host" style="color:#adc4ff">Host dashboard</a></p></main><script>(function(){const main=document.querySelector('main');const left=document.createElement('div'),right=document.createElement('div');left.className='dashboard-left';right.className='dashboard-right';const standings=document.querySelector('#blueTeamCard')?.closest('section.panel');const leaders=document.querySelector('#leaders')?.closest('section.panel');const history=document.querySelector('#history')?.closest('section.panel');const gameGrid=document.querySelector('#play')?.parentElement;for(const node of [standings,leaders,history])if(node)left.appendChild(node);if(gameGrid)right.appendChild(gameGrid);for(const id of ['gamble','swapPanel','changeAssigned','changePanel','koAssigned','koPanel']){const node=document.getElementById(id);if(node)right.appendChild(node)}const footer=main.querySelector('p.muted.center');main.insertBefore(left,footer);main.insertBefore(right,footer);})();</script><script src="/socket.io/socket.io.js"></script><script>
 const socket=io(),$=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let koNoticeShown=new Set();let state=null,myId=localStorage.getItem('betrayalPlayerId')||'',privateVote=undefined,lastRoll=null,offset=0;
 $('joinBtn').onclick=()=>socket.emit('join',{name:$('name').value,id:myId},r=>{if(r.error){$('joinError').textContent=r.error;return;}myId=r.id;localStorage.setItem('betrayalPlayerId',myId);render();});$('name').onkeydown=e=>{if(e.key==='Enter')$('joinBtn').click();};
 function vote(option){socket.emit('vote',{option},r=>{if(r.error)return alert(r.error);if(state.phase==='blind'){privateVote=r.option;render();}});}document.querySelectorAll('[data-option]').forEach(b=>b.onclick=()=>vote(b.dataset.option));$('withdraw').onclick=()=>vote(null);
