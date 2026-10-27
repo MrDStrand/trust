@@ -7,15 +7,116 @@
 #powerBanner .powerChip{padding:6px 12px;border-radius:999px;background:#ffda77;color:#241a07;font-weight:800}
 #powerToast{position:fixed;z-index:9999;left:50%;top:18px;transform:translateX(-50%);width:min(90vw,460px);padding:22px;border:2px solid #ffd76e;border-radius:16px;background:#272114;color:white;box-shadow:0 10px 50px #000b;text-align:center}
 #powerToast strong{display:block;font-size:1.4rem;color:#ffda77;margin-bottom:8px}
+
+/* Compact desktop layout: keep primary actions visible within a typical laptop viewport. */
+@media (min-width: 900px) and (min-height: 650px){
+  main{max-width:1320px;padding:10px 16px 8px}
+  h1{font-size:clamp(22px,2.5vw,30px);margin:1px 0}
+  h2{font-size:16px;margin:0 0 6px}
+  main>.top+ p{margin:3px 0 6px;font-size:12px}
+  .panel{padding:10px 13px;margin:7px 0;border-radius:11px}
+  .grid{gap:9px}
+  .team{padding:8px 12px}
+  .score{font-size:24px}
+  .vote{font-size:25px;padding:7px 17px}
+  .button,select,input{padding:7px 10px;font-size:13px}
+  .pill{padding:5px 9px;font-size:12px}
+  .notice{padding:7px;margin-top:6px;font-size:13px}
+  .timer{padding:7px;font-size:17px}
+  td,th{padding:4px 7px;font-size:12px}
+  #powerBanner{margin:6px 0;padding:8px 12px}
+  #powerBanner .powerTitle{font-size:15px;margin-bottom:2px}
+  #powerBanner .powerChips{margin:3px 0}
+  #powerBanner .powerChip{padding:3px 8px;font-size:12px}
+  #powerHint{font-size:12px}
+  #play p,#superpower p,#gamble p{margin:5px 0;font-size:12px}
+  #play .flex[style],#gamble .flex[style]{margin-top:6px!important;margin-bottom:6px!important}
+  #voteRows{font-size:12px}
+  .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:start}
+  .bottom-grid>.panel{min-width:0}
+  .bottom-grid tbody,#history{font-size:12px}
+  .bottom-grid .panel{max-height:185px;overflow:auto}
+  .bottom-grid #history{max-height:145px;overflow:auto}
+  #changeAllVotes{max-height:130px;overflow:auto}
+  main>.muted.center{margin:4px 0;font-size:11px}
+}
+@media(max-width:899px){.bottom-grid{display:block}}
+@media(max-width:700px){main{padding:10px}.panel{margin:9px 0}.top{gap:7px}h1{font-size:24px}.vote{font-size:25px;padding:10px 17px}.score{font-size:27px}}
+
+/* Desktop application dashboard: viewport-height shell; long data scrolls within cards. */
+@media (min-width: 960px) and (min-height: 580px){
+ html,body{height:100%;overflow:hidden}
+ main{height:100dvh;max-width:none;padding:8px 12px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+ main>.top{flex:0 0 auto;min-height:36px}
+ main>.top h1{font-size:clamp(18px,1.7vw,25px);line-height:1.1}
+ main>.top small{font-size:9px}
+ main>.top+p,main>.muted.center{display:none}
+ #powerBanner{flex:0 0 auto;margin:0;padding:5px 9px}
+ #powerBanner .powerTitle{font-size:12px;display:inline;margin-right:8px}
+ #powerBanner .powerChips{display:inline-flex;margin:0 5px}
+ #powerHint{display:inline;font-size:11px}
+ #join{flex:0 0 auto;margin:0;padding:6px 10px}
+ #join h2{display:inline;margin-right:12px}
+ #join .flex{display:inline-flex}
+ #join p{margin:0}
+ #timer{flex:0 0 auto;padding:5px;font-size:15px}
+ #dashboard{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(240px,0.85fr) minmax(300px,1.15fr) minmax(290px,1fr);grid-template-rows:minmax(0,1fr);gap:8px}
+ .dash-col{min-height:0;min-width:0;display:flex;flex-direction:column;gap:8px}
+ .dash-col>.panel,.dash-col>.grid{margin:0;min-height:0}
+ .dash-col>.panel{padding:9px 11px}
+ .dash-col .panel h2{font-size:14px;margin:0 0 5px}
+ .dash-col .team{padding:6px 9px}
+ .dash-col .score{font-size:22px}
+ .dash-col .vote{font-size:23px;padding:8px 15px}
+ .dash-col .button,.dash-col select{padding:6px 9px;font-size:12px}
+ .dash-col p{margin:5px 0;font-size:12px}
+ .dash-col .notice{padding:6px;margin:5px 0;font-size:12px}
+ .dash-col td,.dash-col th{padding:4px 5px;font-size:11px}
+ #dash-left #play{flex:0 0 auto}
+ #dash-left #superpower{flex:1 1 auto;overflow:auto}
+ #dash-left #gamble{flex:1 1 auto;overflow:auto}
+ #dash-left #standings{flex:0 0 auto}
+ #dash-center #liveVotesPanel{flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden}
+ #dash-center #liveVotesPanel table{display:block;min-height:0;overflow:auto;flex:1}
+ #dash-center #liveVotesPanel thead{position:sticky;top:0;background:#142139}
+ #dash-center #liveVotesPanel tr{display:table;width:100%;table-layout:fixed}
+ #dash-center #liveVotesPanel tbody{display:table;width:100%;table-layout:fixed}
+ #dash-center #liveNote{flex:0 0 auto;font-size:11px;margin:0}
+ #dash-right #leaderPanel{flex:1 1 55%;overflow:auto}
+ #dash-right #historyPanel{flex:1 1 45%;overflow:auto}
+ #dash-right #history{max-height:none;overflow:visible}
+ #dashboard .bottom-grid{display:contents}
+ #dashboard .bottom-grid>.panel{max-height:none}
+ #dashboard .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ #dashboard .flex{gap:6px}
+ #changeAllVotes{max-height:120px;overflow:auto}
+}
+@media (min-width:960px) and (max-height:579px){main{padding:8px} }
 </style></head><body><main><div class="top"><div><small>LIVE SOCIAL STRATEGY · TEAM WARS</small><h1>DON'T TRUST YOUR TEAMMATES</h1></div><span id="status" class="pill">Connecting…</span></div><p>Win together. Betray individually. Then decide whether to double your winnings.</p>
 <section id="powerBanner" class="hidden" role="status" aria-live="polite"><div class="powerTitle">⚡ YOU HAVE SECRET SUPERPOWERS!</div><div id="powerChips" class="powerChips"></div><div id="powerHint">Only you can see these powers. Watch for the CHANGE and KO phases to use them.</div></section><div id="powerToast" class="hidden" role="alertdialog" aria-live="assertive"><strong>⚡ NEW SECRET SUPERPOWER!</strong><div id="powerToastText"></div><button class="button" id="dismissPower" style="margin-top:14px">Got it!</button></div><section id="join" class="panel"><h2>Join the game</h2><div class="flex"><input id="name" maxlength="35" placeholder="Your name"><button class="button" id="joinBtn">Join →</button></div><p id="joinError" class="red"></p></section>
 <div id="timer" class="timer hidden"></div>
-<section class="panel"><h2>Team standings</h2><div class="grid"><div class="team blueborder"><strong class="blue">TEAM BLUE</strong><div id="blueScore" class="score">0</div><small id="blueSize">0 players</small></div><div class="team redborder"><strong class="red">TEAM RED</strong><div id="redScore" class="score">0</div><small id="redSize">0 players</small></div></div></section>
+<section id="standings" class="panel"><h2>Team standings</h2><div class="grid"><div class="team blueborder"><strong class="blue">TEAM BLUE</strong><div id="blueScore" class="score">0</div><small id="blueSize">0 players</small></div><div class="team redborder"><strong class="red">TEAM RED</strong><div id="redScore" class="score">0</div><small id="redSize">0 players</small></div></div></section>
 <div class="grid"><section id="play" class="panel hidden"><div class="top"><h2 id="roundTitle">Round 1</h2><span id="myTeam" class="pill"></span></div><p id="instructions"></p><div id="choices" class="flex hidden"><button class="vote" data-option="A">A</button><button class="vote" data-option="B">B</button><button class="vote" data-option="C">C</button><button id="dButton" class="vote hidden" data-option="D">D</button></div><div class="flex" style="margin-top:14px"><button id="withdraw" class="button secondary hidden">Withdraw</button><span id="myVote" class="muted"></span></div></section>
-<section class="panel"><h2>Your team's live votes</h2><div id="counts" class="notice">Waiting…</div><table><thead><tr><th>Player</th><th>Vote</th><th>Projected</th></tr></thead><tbody id="voteRows"></tbody></table></section></div>
+<section id="liveVotesPanel" class="panel"><h2>Your team's live votes</h2><div id="counts" class="notice">Waiting…</div><table><thead><tr><th>Player</th><th>Vote</th><th>Projected</th></tr></thead><tbody id="voteRows"></tbody></table></section></div>
 <section id="superpower" class="panel hidden"><h2>⚡ Your secret superpowers</h2><div id="powerNotice" class="notice"></div><div id="changeControls" class="hidden"><p>CHANGE: Choose a player and replace their vote, including No vote. You can use this once per round.</p><div id="changeAllVotes" class="notice" aria-live="polite"></div><p id="changeSelectedVote" class="green"></p><select id="changeTarget"></select><select id="changeOption"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="none">No vote</option></select><button id="useChange" class="button">Apply CHANGE</button></div><div id="swapControls" class="hidden"><p>SWAP: Before voting ends, exchange your team and all accumulated points with one other player. Single use.</p><select id="swapTarget"></select><button id="useSwap" class="button">Apply SWAP</button></div><div id="koControls" class="hidden"><p>KO: Select a player whose entire accumulated score will be reset to zero. Once per round.</p><select id="koTarget"></select><button id="useKO" class="button danger">Apply KO</button></div></section><section id="gamble" class="panel hidden"><h2>🎲 Double or Nothing</h2><p>Only this round's positive winnings are at risk. Your earlier points are safe. No time limit.</p><div class="center"><small>Your current round winnings (doubles immediately after each win)</small><div id="stake" class="score green">0</div><p id="gambleInfo"></p></div><div id="gambleActions" class="center"><div class="flex" style="justify-content:center;margin:16px 0"><button class="button" id="even">Choose EVEN</button><button class="button" id="odd">Choose ODD</button><button class="button secondary" id="bank">Keep my points</button></div></div><div id="gambleResult" class="notice hidden"></div></section>
-<p id="liveNote" class="muted hidden">* Live team totals include winnings currently at stake. Final scores are banked when the Game Master closes Double or Nothing.</p><section class="panel"><h2>Individual leaderboard</h2><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Points</th></tr></thead><tbody id="leaders"></tbody></table></section>
-<section class="panel"><h2>Round history</h2><div id="history">No completed rounds.</div></section><p class="muted center">Hosted by Game Master</p></main><script src="/socket.io/socket.io.js"></script><script>
+<p id="liveNote" class="muted hidden">* Live team totals include winnings currently at stake. Final scores are banked when the Game Master closes Double or Nothing.</p><div class="bottom-grid"><section id="leaderPanel" class="panel"><h2>Individual leaderboard</h2><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Points</th></tr></thead><tbody id="leaders"></tbody></table></section>
+<section id="historyPanel" class="panel"><h2>Round history</h2><div id="history">No completed rounds.</div></section></div><p class="muted center">Hosted by Game Master</p></main><script src="/socket.io/socket.io.js"></script><script>
+// Reorganize existing cards without replacing their elements or event handlers.
+(function buildDashboard(){
+ const main=document.querySelector('main');
+ const board=document.createElement('div');board.id='dashboard';
+ const left=document.createElement('div');left.id='dash-left';left.className='dash-col';
+ const center=document.createElement('div');center.id='dash-center';center.className='dash-col';
+ const right=document.createElement('div');right.id='dash-right';right.className='dash-col';
+ const voting=document.getElementById('play').parentElement;
+ const bottom=document.querySelector('.bottom-grid');
+ main.insertBefore(board,document.getElementById('liveNote'));
+ board.append(left,center,right);
+ left.append(document.getElementById('standings'),document.getElementById('play'),document.getElementById('superpower'),document.getElementById('gamble'));
+ center.append(document.getElementById('liveVotesPanel'),document.getElementById('liveNote'));
+ right.append(document.getElementById('leaderPanel'),document.getElementById('historyPanel'));
+ voting.remove();bottom.remove();
+})();
 const socket=io(),$=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let state=null,myId=localStorage.getItem('betrayalPlayerId')||'',privateVote=undefined,lastRoll=null,offset=0,seenPowersByPlayer={};$('dismissPower').onclick=()=>$('powerToast').classList.add('hidden');
 $('joinBtn').onclick=()=>socket.emit('join',{name:$('name').value,id:myId},r=>{if(r.error){$('joinError').textContent=r.error;return;}myId=r.id;localStorage.setItem('betrayalPlayerId',myId);render();});$('name').onkeydown=e=>{if(e.key==='Enter')$('joinBtn').click();};
 function vote(option){socket.emit('vote',{option},r=>{if(r.error)return alert(r.error);if(state.phase==='blind'){privateVote=r.option;render();}});}document.querySelectorAll('[data-option]').forEach(b=>b.onclick=()=>vote(b.dataset.option));$('withdraw').onclick=()=>vote(null);
