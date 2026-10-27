@@ -25,9 +25,23 @@
 
 This is an in-memory real-time game with JSON persistence. Render ephemeral filesystem storage can be lost on redeploy/restart; use persistent disk or external storage for durable records. A browser's player ID is stored in localStorage; avoid sharing browsers during a game. Set a strong HOST_KEY. No voice chat is included.
 
+## KO visibility improvements
+- Players assigned KO see a prominent private notification immediately, before the superpower stage.
+- Round history shows each KO victim, the points removed, and the reset to zero. The holder identity is shown only to Game Master, not other players.
 
-## Superpower visibility and audit history
-During CHANGE, the power holder sees all players' current post-blind votes on both teams, including No vote. Other players do not gain cross-team visibility during CHANGE. Completed round history lists the CHANGE actor, target, before/after choice and the KO actor, target and total score reset. Game Master can export superpower actions as CSV. Historical rounds created before this release may only contain player IDs if those players have since left.
 
+## Round multiplier and compact layouts
 
-Security update: The Game Master dashboard stays hidden until successful HOST_KEY authentication; unauthenticated Socket.IO clients receive no player or history data. Set a strong HOST_KEY in Render and redeploy. Remove old shared URLs/keys if exposed.
+Before opening a round, the Game Master can select a **1x–20x multiplier** (whole numbers). The setting applies to that round's **voting points and penalties**: for example, unanimous +150 at 3x becomes +450, and an abstention −25 becomes −75. Double or Nothing starts from the multiplied positive award and continues to double normally. KO still sets the victim's full positive accumulated score to zero; it is not multiplied. Each completed round stores its multiplier in history and CSV export. The multiplier cannot be changed once voting has opened.
+
+Desktop player and host views use denser controls and scrollable history/player tables; the voting countdown is pinned to the top of the player viewport and visible while scrolling. On phones, the layout remains stacked and scrollable.
+
+## CHANGE secret superpower
+
+- The Game Master can grant or revoke CHANGE during open, live countdown, or blind voting.
+- CHANGE holders are notified privately when assigned. The phase occurs after voting closes and before Double or Nothing.
+- A holder may permanently override **one** vote (their own or any other player's, on either team) to A/B/C. D is allowed only when the target was eligible for secret D.
+- The selected replacement must differ from the current vote. Each holder may use CHANGE once per round. The override cannot be reversed through the regular voting interface.
+- Game Master presses **Finish CHANGE** to recalculate team-specific voting points and begin Double or Nothing. Unused CHANGE powers expire at round end.
+- Public history shows the target and old/new vote, not the secret holder. Game Master history and CSV include the CHANGE events.
+- Existing KO remains a separate post-gambling power. Player team score highlight remains in place.
