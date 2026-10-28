@@ -31,3 +31,6 @@ During CHANGE, the power holder sees all players' current post-blind votes on bo
 
 
 Security update: The Game Master dashboard stays hidden until successful HOST_KEY authentication; unauthenticated Socket.IO clients receive no player or history data. Set a strong HOST_KEY in Render and redeploy. Remove old shared URLs/keys if exposed.
+
+## SWAP superpower
+The Game Master can grant SWAP from the leaderboard. A player may use it once during open voting, live countdown, or the final blind countdown to exchange their accumulated score and team with another player (not their votes). Unused SWAP assignments expire automatically when voting closes. During the blind countdown, the swap is applied privately on the server; the public standings remain frozen until voting closes. SWAP actions are stored in round history and included in the superpower CSV.
