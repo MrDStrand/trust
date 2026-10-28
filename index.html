@@ -20,6 +20,7 @@
  .dashboard-left>.panel:first-child{flex:0 0 auto}
  .dashboard-left>.panel:nth-child(2){flex:1;min-height:0;overflow:auto}
  .dashboard-right>.grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px}
+ .dashboard-right>.grid:has(#play.hidden){grid-template-columns:minmax(0,1fr)}
  .dashboard-right>.grid>.panel{overflow:auto;min-height:0}
  .dashboard-right>.panel{flex:0 0 auto;max-height:37%;overflow:auto}
  .dashboard-right>.panel.hidden{display:none!important}
