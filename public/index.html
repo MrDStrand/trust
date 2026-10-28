@@ -15,8 +15,8 @@
  main>.top{flex:0 0 auto;min-height:36px;gap:8px}h1{font-size:19px;margin:0;letter-spacing:.035em}h2{font-size:13px;margin:0 0 6px}main>.top small{font-size:9px}
  main>p:not(#liveNote){display:none}main>.timer{flex:0 0 auto;padding:6px;font-size:16px;margin:0}
  .panel{padding:10px;margin:0;border-radius:10px;min-height:0}
- .dashboard-shell{display:grid;grid-template-columns:minmax(235px,27%) minmax(0,1fr);gap:8px;flex:1;min-height:0}
- .dashboard-left,.dashboard-right{min-height:0;display:flex;flex-direction:column;gap:8px}
+ .dashboard-shell{display:grid;grid-template-columns:minmax(225px,27%) minmax(0,38%) minmax(0,1fr);gap:8px;flex:1;min-height:0}
+ .dashboard-left,.dashboard-right,.dashboard-history-column{min-height:0;display:flex;flex-direction:column;gap:8px}
  .dashboard-left>.panel:first-child{flex:0 0 auto}
  .dashboard-left>.panel:nth-child(2){flex:1;min-height:0;overflow:auto}
  .dashboard-right>.grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px}
@@ -42,12 +42,12 @@
  #instructions{font-size:12px;margin:3px 0}#myVote{font-size:11px}
  #changeControls p,#koControls p,#gamble p{margin:5px 0}
  #changeAllVotes{max-height:100px;overflow:auto}#stake{font-size:20px}
- .dashboard-history{flex:0 0 auto;max-height:34px;overflow:hidden;border:1px solid #2e405f;border-radius:8px;background:#142139}
- .dashboard-history[open]{max-height:38%;overflow:auto}
- .dashboard-history summary{cursor:pointer;padding:7px 10px;font-weight:700}
- .dashboard-history .panel{border:0}
+ .dashboard-history{flex:1;min-height:0;overflow:auto;border:1px solid #2e405f;border-radius:8px;background:#142139}
+ .dashboard-history[open]{max-height:none;overflow:auto}
+ .dashboard-history summary{cursor:pointer;padding:9px 10px;font-weight:700;list-style:none}.dashboard-history summary::-webkit-details-marker{display:none}
+ .dashboard-history .panel{border:0;background:transparent;padding:10px}.dashboard-history .notice{overflow-wrap:anywhere}.dashboard-history-column{overflow:hidden}
  }
- @media(max-width:800px){.dashboard-shell,.dashboard-left,.dashboard-right{display:contents}.dashboard-history summary{cursor:pointer;padding:10px}.dashboard-history:not([open])>section{display:none}}
+ @media(max-width:800px){.dashboard-shell,.dashboard-left,.dashboard-right,.dashboard-history-column{display:contents}.dashboard-history summary{cursor:pointer;padding:10px}.dashboard-history:not([open])>section{display:none}}
 </style></head><body><main><div class="top"><div><small>LIVE SOCIAL STRATEGY · TEAM WARS</small><h1>DON'T TRUST YOUR TEAMMATES</h1></div><span id="status" class="pill">Connecting…</span></div><p>Win together. Betray individually. Then decide whether to double your winnings.</p>
 <section id="powerBanner" class="hidden" role="status" aria-live="polite"><div class="powerTitle">⚡ YOU HAVE SECRET SUPERPOWERS!</div><div id="powerChips" class="powerChips"></div><div id="powerHint">Only you can see these powers. Watch for the CHANGE and KO phases to use them.</div></section><div id="powerToast" class="hidden" role="alertdialog" aria-live="assertive"><strong>⚡ NEW SECRET SUPERPOWER!</strong><div id="powerToastText"></div><button class="button" id="dismissPower" style="margin-top:14px">Got it!</button></div><section id="join" class="panel"><h2>Join the game</h2><div class="flex"><input id="name" maxlength="35" placeholder="Your name"><button class="button" id="joinBtn">Join →</button></div><p id="joinError" class="red"></p></section>
 <div id="timer" class="timer hidden"></div>
@@ -66,13 +66,14 @@
  const shell=document.createElement('div');shell.className='dashboard-shell';
  const left=document.createElement('div');left.className='dashboard-left';
  const right=document.createElement('div');right.className='dashboard-right';
- main.insertBefore(shell,standings);shell.append(left,right);
+ const historyColumn=document.createElement('div');historyColumn.className='dashboard-history-column';
+ main.insertBefore(shell,standings);shell.append(left,right,historyColumn);
  left.append(standings,leaders);right.append(playGrid);
  for(const id of ['superpower','gamble'])right.append(document.getElementById(id));
  const history=document.querySelector('section.panel:has(#history)');
  const details=document.createElement('details');details.className='dashboard-history';
- const summary=document.createElement('summary');summary.textContent='Round history · expand';
- history.before(details);details.append(summary,history);right.append(details);
+ const summary=document.createElement('summary');summary.textContent='Round history';
+ history.before(details);details.append(summary,history);details.open=true;historyColumn.append(details);
  const liveNote=document.getElementById('liveNote');right.append(liveNote);
 })();
 const socket=io(),$=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let state=null,myId=localStorage.getItem('betrayalPlayerId')||'',privateVote=undefined,lastRoll=null,offset=0,seenPowersByPlayer={};$('dismissPower').onclick=()=>$('powerToast').classList.add('hidden');
